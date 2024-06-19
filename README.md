@@ -43,15 +43,15 @@ The model will be trained and evaluated using the Facial Expression Recognition 
 
 ## To-Do List
 - [X] Research and select appropriate model architectures (MobileNet, EfficientNet).
-- [ ] Collect and preprocess the AffectNet and FER2013 datasets.
-- [ ] Train the model using pre-trained weights and fine-tune on specific datasets.
-- [ ] Implement and test quantization techniques.
-- [ ] Implement and test pruning techniques.
-- [ ] Apply knowledge distillation methods.
-- [ ] Optimize the model for real-time video processing.
-- [ ] Test the model’s robustness under varying real-world conditions.
-- [ ] Evaluate the model’s performance on the FER-2013 dataset.
-- [ ] Deploy the model on a mobile device and test real-time performance.
+- [X] Collect and preprocess the AffectNet and FER2013 datasets.
+- [X] Train the model using pre-trained weights and fine-tune on specific datasets.
+- [X] Implement and test quantization techniques.
+- [X] Implement and test pruning techniques.
+- [X] Apply knowledge distillation methods.
+- [X] Optimize the model for real-time video processing.
+- [X] Test the model’s robustness under varying real-world conditions.
+- [X] Evaluate the model’s performance on the FER-2013 dataset.
+- [X] Deploy the model on a mobile device and test real-time performance.
 - [ ] Document the development process and final model performance.
 
 Why EfficientNet-B0 is Better for Real-Time Facial Emotion Recognition on Mobile Devices
