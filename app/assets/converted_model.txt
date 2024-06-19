@@ -1,0 +1,7 @@
+Happy
+Sad
+Fear
+Surprise
+Neutral
+Angry
+Disgust

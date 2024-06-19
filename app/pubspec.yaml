@@ -35,6 +35,12 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
+  flutter_riverpod: ^2.5.1
+  camera: ^0.11.0+1
+  tensorflow_lite_flutter: ^2.0.1
+  image_picker: ^1.1.2
+  image: ^3.3.0
+  community_charts_flutter: ^1.0.4
 
 dev_dependencies:
   flutter_test:
@@ -59,10 +65,20 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
-
+  assets:
+    - assets/mobilenet_v1_1.0_224.txt
+    - assets/mobilenet_v1_1.0_224.tflite
+    - assets/yolov2_tiny.tflite
+    - assets/yolov2_tiny.txt
+    - assets/ssd_mobilenet.tflite
+    - assets/ssd_mobilenet.txt
+    - assets/deeplabv3_257_mv_gpu.tflite
+    - assets/deeplabv3_257_mv_gpu.txt
+    - assets/posenet_mv1_075_float_from_checkpoints.tflite
+    - assets/trained_vggface.tflite
+    - assets/trained_vggface.txt
+    - assets/converted_model.tflite
+    - assets/converted_model.txt
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
