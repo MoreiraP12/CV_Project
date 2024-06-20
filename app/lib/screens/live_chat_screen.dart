@@ -22,19 +22,16 @@ class LiveChatScreen extends ConsumerWidget {
         ],
       ),
       body: Column(
-        children: [Expanded(child: VideoFeed()), Expanded(child: ChatBox())],
+        children: [Expanded(child: Center(child: VideoFeed())), Consumer(
+          builder: (context, ref, _) {
+            final predictions = ref.watch(predictionProvider);
+            if (predictions == null) {
+              return const SizedBox.shrink();
+            }
+            return PredictionInformation(predictions: predictions);
+          }
+        )],
       ),
-    );
-  }
-}
-
-class ChatBox extends StatelessWidget {
-  const ChatBox({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder(
-      child: Text('Chatbox'),
     );
   }
 }
@@ -47,18 +44,10 @@ class VideoFeed extends ConsumerStatefulWidget {
 class _VideoFeedState extends ConsumerState<VideoFeed> {
   @override
   Widget build(BuildContext context) {
-    final predictions = ref.watch(predictionProvider) ?? [];
     final _controller = ref.watch(_cameraControllerProvider).value;
     return (_controller?.value.isInitialized ?? false)
-        ? Row(
-            children: [
-              Expanded(child: CameraPreview(_controller!)),
-              SizedBox(
-                  height: double.infinity,
-                  child: PredictionInformation(predictions: predictions)),
-            ],
-          )
-        : Center(child: CircularProgressIndicator());
+        ? CameraPreview(_controller!)
+        : const Center(child: CircularProgressIndicator());
   }
 }
 

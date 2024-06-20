@@ -1,15 +1,25 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'dart:math';
+import 'package:uuid/uuid.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
-class NameDetectionService {
-  static const facenetModelPath = 'assets/facenet_512_int_quantized.tflite';
+final detectedFaceProvider = StateProvider<File?>((ref) => null);
+
+final nameDetectionServiceProvider =
+    AsyncNotifierProvider<NameDetectionServiceNotifier, List<String>>(
+        () => NameDetectionServiceNotifier());
+
+class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
+  static const facenetModelPath = 'assets/facenet.tflite';
   static const faceDetectorModelPath = 'assets/mask_detector.tflite';
   late Interpreter facenetInterpreter;
   late Interpreter faceDetectorInterpreter;
@@ -18,11 +28,9 @@ class NameDetectionService {
   late List<int> faceDetectorInputShape;
   late List<int> faceDetectorOutputShape;
 
-  NameDetectionService() {
-    _loadModels();
-  }
-
-  Future<void> _loadModels() async {
+  @override
+  FutureOr<List<String>> build() async {
+    print('start loading name detection model');
     facenetInterpreter = await Interpreter.fromAsset(facenetModelPath);
     facenetInputShape = facenetInterpreter.getInputTensor(0).shape;
     facenetOutputShape = facenetInterpreter.getOutputTensor(0).shape;
@@ -34,14 +42,43 @@ class NameDetectionService {
 
     saveKnownFaces();
     print('done loading name detection model');
+    return [];
   }
 
   Future<img.Image> _loadImage(File image) async {
     final img.Image? decodedImage = img.decodeImage(image.readAsBytesSync());
     if (decodedImage == null) {
-      throw Exception('Failed to decode image');
+      throw Exception('Failed to decode image!?');
     }
     return decodedImage;
+  }
+
+  Future<List<dynamic>> _detectFacesMLKit(File image) async {
+    final inputImage = InputImage.fromFile(image);
+    final options = FaceDetectorOptions(enableClassification: true);
+    final faceDetector = FaceDetector(options: options);
+    final List<Face> faces = await faceDetector.processImage(inputImage);
+
+    return faces
+        .map((face) {
+          print('smiling prob ${face.smilingProbability}');
+          return {
+              'x': face.boundingBox.left.toInt(),
+              'y': face.boundingBox.top.toInt(),
+              'width': face.boundingBox.width.toInt(),
+              'height': face.boundingBox.height.toInt()
+            };
+        })
+        .toList();
+
+    /*return [
+      {
+        'x': data[bestBoundingBoxIndex],
+        'y': data[bestBoundingBoxIndex + 1],
+        'width': data[bestBoundingBoxIndex + 2],
+        'height': data[bestBoundingBoxIndex + 3]
+      }
+    ];*/
   }
 
   Future<List<dynamic>> _detectFaces(img.Image image) async {
@@ -71,8 +108,18 @@ class NameDetectionService {
     // let's take just the first face for now
 
     final data = faceDetectorInterpreter.getOutputTensor(0).data;
+
+    // just use first face
+    final bestBoundingBoxIndex = 4 * _findIndexOfMaxValue(output[0]);
+    print('bounding boxes: $data');
+
     return [
-      {'x': data[0], 'y': data[1], 'width': data[2], 'height': data[3]}
+      {
+        'x': data[bestBoundingBoxIndex],
+        'y': data[bestBoundingBoxIndex + 1],
+        'width': data[bestBoundingBoxIndex + 2],
+        'height': data[bestBoundingBoxIndex + 3]
+      }
     ];
 /*
     for (var i = 0; i < output.length; i += 6) {
@@ -87,6 +134,24 @@ class NameDetectionService {
       }
     }*/
     return faces;
+  }
+
+  int _findIndexOfMaxValue(List<double> numbers) {
+    if (numbers.isEmpty) {
+      throw ArgumentError("List must not be empty");
+    }
+
+    double maxValue = numbers[0];
+    int maxIndex = 0;
+
+    for (int i = 1; i < numbers.length; i++) {
+      if (numbers[i] > maxValue) {
+        maxValue = numbers[i];
+        maxIndex = i;
+      }
+    }
+
+    return maxIndex;
   }
 
   List<double> _generateEmbedding(img.Image faceImage) {
@@ -175,8 +240,11 @@ class NameDetectionService {
   }
 
   Future<List<String>> recognizeFacesInImage(File imageFile) async {
+    state = AsyncValue.loading();
+
     final image = await _loadImage(imageFile);
-    final faces = await _detectFaces(image);
+    final faces =
+        await _detectFacesMLKit(imageFile); //await _detectFaces(image);
 
     final result = <String>[];
 
@@ -188,15 +256,25 @@ class NameDetectionService {
       final height = face['height'];
 
       final faceImage = img.copyCrop(image, x, y, width, height);
+
+      // just for debugging
+      final jpgBytes = img.encodeJpg(faceImage);
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/${Uuid().v4()}.jpg';
+      final file = File(filePath);
+      await file.writeAsBytes(jpgBytes);
+      ref.read(detectedFaceProvider.notifier).state = file;
+      // debugging end
+
       final embedding = _generateEmbedding(faceImage);
-      final name = await _findMatch(embedding, 1.2);
+      final name = await _findMatch(embedding, 0.3);
 
       if (name != null) result.add(name);
 
       if (name != null) {
         print('Face recognized: $name');
       } else {
-        final newName = DateTime.now().millisecondsSinceEpoch.toString();
+        final newName = Uuid().v4();
         print('Face not recognized, creating new face with name $newName');
         final personFolder =
             Directory(path.join(imageFile.parent.path, 'images', newName));
@@ -207,6 +285,7 @@ class NameDetectionService {
       }
     }
 
+    state = AsyncValue.data(result);
     return result;
   }
 
@@ -227,7 +306,8 @@ class NameDetectionService {
 
       for (var imageFile in images) {
         final image = img.decodeImage(imageFile.readAsBytesSync())!;
-        final faces = await _detectFaces(image);
+        final faces =
+            await _detectFacesMLKit(imageFile); // await _detectFaces(image);
 
         for (var face in faces) {
           final box = face['box'];

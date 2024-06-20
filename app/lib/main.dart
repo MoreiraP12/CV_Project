@@ -8,11 +8,9 @@ import 'screens/model_settings_screen.dart';
 import 'screens/statistics_screen.dart';
 
 // TODO clean up instantiation
-late final NameDetectionService nameDetectionService;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  nameDetectionService = NameDetectionService();
   runApp(
     ProviderScope(
       child: EmotionDetectionApp(),
@@ -22,6 +20,7 @@ void main() {
 
 class EmotionDetectionApp extends StatelessWidget {
   @override
+      
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,

@@ -13,6 +13,7 @@ class PredictionInformation extends StatelessWidget {
 
     return Container(
       color: Colors.black54,
+      width: double.infinity,
       padding: const EdgeInsets.all(10),
       child: Wrap(
         direction: Axis.vertical,

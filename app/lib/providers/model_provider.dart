@@ -38,7 +38,7 @@ enum ModelType {
   ),
 
   emaiface(
-    modelPath: "assets/converted_model.tflite",
+    modelPath: "assets/converted_model_18.tflite",
     labelPath: "assets/converted_model.txt",
     displayName: "EMAIFace",
   ),
