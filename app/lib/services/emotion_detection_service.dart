@@ -2,6 +2,11 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:tensorflow_lite_flutter/tensorflow_lite_flutter.dart';
 
+
+// TODO use other package instead so we can use just one package for name detection too
+// https://pub.dev/packages/tflite_flutter
+// https://github.com/tensorflow/flutter-tflite/blob/main/example/image_classification_mobilenet/lib/helper/image_classification_helper.dart
+
 class EmotionDetectionService {
   static Future<List<Prediction>> predictFromImage(File image) async {
     final result = await Tflite.runModelOnImage(

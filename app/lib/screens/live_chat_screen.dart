@@ -12,7 +12,7 @@ class LiveChatScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Live Name & Emotion Detection'),
+        title: Text('Name & Emotion Detection'),
         actions: [
           IconButton(
             icon: Icon(Icons.switch_camera),
