@@ -1,0 +1,261 @@
+Model: "model"
+__________________________________________________________________________________________________
+ Layer (type)                Output Shape                 Param #   Connected to                  
+==================================================================================================
+ input_1 (InputLayer)        [(None, 48, 48, 3)]          0         []                            
+                                                                                                  
+ conv2d (Conv2D)             (None, 24, 24, 32)           896       ['input_1[0][0]']             
+                                                                                                  
+ batch_normalization (Batch  (None, 24, 24, 32)           128       ['conv2d[0][0]']              
+ Normalization)                                                                                   
+                                                                                                  
+ activation (Activation)     (None, 24, 24, 32)           0         ['batch_normalization[0][0]'] 
+                                                                                                  
+ conv2d_1 (Conv2D)           (None, 24, 24, 32)           1056      ['activation[0][0]']          
+                                                                                                  
+ batch_normalization_1 (Bat  (None, 24, 24, 32)           128       ['conv2d_1[0][0]']            
+ chNormalization)                                                                                 
+                                                                                                  
+ activation_1 (Activation)   (None, 24, 24, 32)           0         ['batch_normalization_1[0][0]'
+                                                                    ]                             
+                                                                                                  
+ depthwise_conv2d (Depthwis  (None, 24, 24, 32)           320       ['activation_1[0][0]']        
+ eConv2D)                                                                                         
+                                                                                                  
+ batch_normalization_2 (Bat  (None, 24, 24, 32)           128       ['depthwise_conv2d[0][0]']    
+ chNormalization)                                                                                 
+                                                                                                  
+ activation_2 (Activation)   (None, 24, 24, 32)           0         ['batch_normalization_2[0][0]'
+                                                                    ]                             
+                                                                                                  
+ conv2d_2 (Conv2D)           (None, 24, 24, 16)           528       ['activation_2[0][0]']        
+                                                                                                  
+ batch_normalization_3 (Bat  (None, 24, 24, 16)           64        ['conv2d_2[0][0]']            
+ chNormalization)                                                                                 
+                                                                                                  
+ global_average_pooling2d (  (None, 16)                   0         ['batch_normalization_3[0][0]'
+ GlobalAveragePooling2D)                                            ]                             
+                                                                                                  
+ dense (Dense)               (None, 4)                    68        ['global_average_pooling2d[0][
+                                                                    0]']                          
+                                                                                                  
+ dense_1 (Dense)             (None, 16)                   80        ['dense[0][0]']               
+                                                                                                  
+ multiply (Multiply)         (None, 24, 24, 16)           0         ['batch_normalization_3[0][0]'
+                                                                    , 'dense_1[0][0]']            
+                                                                                                  
+ conv2d_3 (Conv2D)           (None, 24, 24, 96)           1632      ['multiply[0][0]']            
+                                                                                                  
+ batch_normalization_4 (Bat  (None, 24, 24, 96)           384       ['conv2d_3[0][0]']            
+ chNormalization)                                                                                 
+                                                                                                  
+ activation_3 (Activation)   (None, 24, 24, 96)           0         ['batch_normalization_4[0][0]'
+                                                                    ]                             
+                                                                                                  
+ depthwise_conv2d_1 (Depthw  (None, 12, 12, 96)           960       ['activation_3[0][0]']        
+ iseConv2D)                                                                                       
+                                                                                                  
+ batch_normalization_5 (Bat  (None, 12, 12, 96)           384       ['depthwise_conv2d_1[0][0]']  
+ chNormalization)                                                                                 
+                                                                                                  
+ activation_4 (Activation)   (None, 12, 12, 96)           0         ['batch_normalization_5[0][0]'
+                                                                    ]                             
+                                                                                                  
+ conv2d_4 (Conv2D)           (None, 12, 12, 24)           2328      ['activation_4[0][0]']        
+                                                                                                  
+ batch_normalization_6 (Bat  (None, 12, 12, 24)           96        ['conv2d_4[0][0]']            
+ chNormalization)                                                                                 
+                                                                                                  
+ global_average_pooling2d_1  (None, 24)                   0         ['batch_normalization_6[0][0]'
+  (GlobalAveragePooling2D)                                          ]                             
+                                                                                                  
+ dense_2 (Dense)             (None, 6)                    150       ['global_average_pooling2d_1[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_3 (Dense)             (None, 24)                   168       ['dense_2[0][0]']             
+                                                                                                  
+ multiply_1 (Multiply)       (None, 12, 12, 24)           0         ['batch_normalization_6[0][0]'
+                                                                    , 'dense_3[0][0]']            
+                                                                                                  
+ conv2d_5 (Conv2D)           (None, 12, 12, 144)          3600      ['multiply_1[0][0]']          
+                                                                                                  
+ batch_normalization_7 (Bat  (None, 12, 12, 144)          576       ['conv2d_5[0][0]']            
+ chNormalization)                                                                                 
+                                                                                                  
+ activation_5 (Activation)   (None, 12, 12, 144)          0         ['batch_normalization_7[0][0]'
+                                                                    ]                             
+                                                                                                  
+ depthwise_conv2d_2 (Depthw  (None, 6, 6, 144)            3744      ['activation_5[0][0]']        
+ iseConv2D)                                                                                       
+                                                                                                  
+ batch_normalization_8 (Bat  (None, 6, 6, 144)            576       ['depthwise_conv2d_2[0][0]']  
+ chNormalization)                                                                                 
+                                                                                                  
+ activation_6 (Activation)   (None, 6, 6, 144)            0         ['batch_normalization_8[0][0]'
+                                                                    ]                             
+                                                                                                  
+ conv2d_6 (Conv2D)           (None, 6, 6, 40)             5800      ['activation_6[0][0]']        
+                                                                                                  
+ batch_normalization_9 (Bat  (None, 6, 6, 40)             160       ['conv2d_6[0][0]']            
+ chNormalization)                                                                                 
+                                                                                                  
+ global_average_pooling2d_2  (None, 40)                   0         ['batch_normalization_9[0][0]'
+  (GlobalAveragePooling2D)                                          ]                             
+                                                                                                  
+ dense_4 (Dense)             (None, 10)                   410       ['global_average_pooling2d_2[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_5 (Dense)             (None, 40)                   440       ['dense_4[0][0]']             
+                                                                                                  
+ multiply_2 (Multiply)       (None, 6, 6, 40)             0         ['batch_normalization_9[0][0]'
+                                                                    , 'dense_5[0][0]']            
+                                                                                                  
+ conv2d_7 (Conv2D)           (None, 6, 6, 240)            9840      ['multiply_2[0][0]']          
+                                                                                                  
+ batch_normalization_10 (Ba  (None, 6, 6, 240)            960       ['conv2d_7[0][0]']            
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_7 (Activation)   (None, 6, 6, 240)            0         ['batch_normalization_10[0][0]
+                                                                    ']                            
+                                                                                                  
+ depthwise_conv2d_3 (Depthw  (None, 3, 3, 240)            2400      ['activation_7[0][0]']        
+ iseConv2D)                                                                                       
+                                                                                                  
+ batch_normalization_11 (Ba  (None, 3, 3, 240)            960       ['depthwise_conv2d_3[0][0]']  
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_8 (Activation)   (None, 3, 3, 240)            0         ['batch_normalization_11[0][0]
+                                                                    ']                            
+                                                                                                  
+ conv2d_8 (Conv2D)           (None, 3, 3, 80)             19280     ['activation_8[0][0]']        
+                                                                                                  
+ batch_normalization_12 (Ba  (None, 3, 3, 80)             320       ['conv2d_8[0][0]']            
+ tchNormalization)                                                                                
+                                                                                                  
+ global_average_pooling2d_3  (None, 80)                   0         ['batch_normalization_12[0][0]
+  (GlobalAveragePooling2D)                                          ']                            
+                                                                                                  
+ dense_6 (Dense)             (None, 20)                   1620      ['global_average_pooling2d_3[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_7 (Dense)             (None, 80)                   1680      ['dense_6[0][0]']             
+                                                                                                  
+ multiply_3 (Multiply)       (None, 3, 3, 80)             0         ['batch_normalization_12[0][0]
+                                                                    ',                            
+                                                                     'dense_7[0][0]']             
+                                                                                                  
+ conv2d_9 (Conv2D)           (None, 3, 3, 480)            38880     ['multiply_3[0][0]']          
+                                                                                                  
+ batch_normalization_13 (Ba  (None, 3, 3, 480)            1920      ['conv2d_9[0][0]']            
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_9 (Activation)   (None, 3, 3, 480)            0         ['batch_normalization_13[0][0]
+                                                                    ']                            
+                                                                                                  
+ depthwise_conv2d_4 (Depthw  (None, 3, 3, 480)            12480     ['activation_9[0][0]']        
+ iseConv2D)                                                                                       
+                                                                                                  
+ batch_normalization_14 (Ba  (None, 3, 3, 480)            1920      ['depthwise_conv2d_4[0][0]']  
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_10 (Activation)  (None, 3, 3, 480)            0         ['batch_normalization_14[0][0]
+                                                                    ']                            
+                                                                                                  
+ conv2d_10 (Conv2D)          (None, 3, 3, 112)            53872     ['activation_10[0][0]']       
+                                                                                                  
+ batch_normalization_15 (Ba  (None, 3, 3, 112)            448       ['conv2d_10[0][0]']           
+ tchNormalization)                                                                                
+                                                                                                  
+ global_average_pooling2d_4  (None, 112)                  0         ['batch_normalization_15[0][0]
+  (GlobalAveragePooling2D)                                          ']                            
+                                                                                                  
+ dense_8 (Dense)             (None, 28)                   3164      ['global_average_pooling2d_4[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_9 (Dense)             (None, 112)                  3248      ['dense_8[0][0]']             
+                                                                                                  
+ multiply_4 (Multiply)       (None, 3, 3, 112)            0         ['batch_normalization_15[0][0]
+                                                                    ',                            
+                                                                     'dense_9[0][0]']             
+                                                                                                  
+ conv2d_11 (Conv2D)          (None, 3, 3, 672)            75936     ['multiply_4[0][0]']          
+                                                                                                  
+ batch_normalization_16 (Ba  (None, 3, 3, 672)            2688      ['conv2d_11[0][0]']           
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_11 (Activation)  (None, 3, 3, 672)            0         ['batch_normalization_16[0][0]
+                                                                    ']                            
+                                                                                                  
+ depthwise_conv2d_5 (Depthw  (None, 2, 2, 672)            17472     ['activation_11[0][0]']       
+ iseConv2D)                                                                                       
+                                                                                                  
+ batch_normalization_17 (Ba  (None, 2, 2, 672)            2688      ['depthwise_conv2d_5[0][0]']  
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_12 (Activation)  (None, 2, 2, 672)            0         ['batch_normalization_17[0][0]
+                                                                    ']                            
+                                                                                                  
+ conv2d_12 (Conv2D)          (None, 2, 2, 192)            129216    ['activation_12[0][0]']       
+                                                                                                  
+ batch_normalization_18 (Ba  (None, 2, 2, 192)            768       ['conv2d_12[0][0]']           
+ tchNormalization)                                                                                
+                                                                                                  
+ global_average_pooling2d_5  (None, 192)                  0         ['batch_normalization_18[0][0]
+  (GlobalAveragePooling2D)                                          ']                            
+                                                                                                  
+ dense_10 (Dense)            (None, 48)                   9264      ['global_average_pooling2d_5[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_11 (Dense)            (None, 192)                  9408      ['dense_10[0][0]']            
+                                                                                                  
+ multiply_5 (Multiply)       (None, 2, 2, 192)            0         ['batch_normalization_18[0][0]
+                                                                    ',                            
+                                                                     'dense_11[0][0]']            
+                                                                                                  
+ conv2d_13 (Conv2D)          (None, 2, 2, 1152)           222336    ['multiply_5[0][0]']          
+                                                                                                  
+ batch_normalization_19 (Ba  (None, 2, 2, 1152)           4608      ['conv2d_13[0][0]']           
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_13 (Activation)  (None, 2, 2, 1152)           0         ['batch_normalization_19[0][0]
+                                                                    ']                            
+                                                                                                  
+ depthwise_conv2d_6 (Depthw  (None, 2, 2, 1152)           11520     ['activation_13[0][0]']       
+ iseConv2D)                                                                                       
+                                                                                                  
+ batch_normalization_20 (Ba  (None, 2, 2, 1152)           4608      ['depthwise_conv2d_6[0][0]']  
+ tchNormalization)                                                                                
+                                                                                                  
+ activation_14 (Activation)  (None, 2, 2, 1152)           0         ['batch_normalization_20[0][0]
+                                                                    ']                            
+                                                                                                  
+ conv2d_14 (Conv2D)          (None, 2, 2, 320)            368960    ['activation_14[0][0]']       
+                                                                                                  
+ batch_normalization_21 (Ba  (None, 2, 2, 320)            1280      ['conv2d_14[0][0]']           
+ tchNormalization)                                                                                
+                                                                                                  
+ global_average_pooling2d_6  (None, 320)                  0         ['batch_normalization_21[0][0]
+  (GlobalAveragePooling2D)                                          ']                            
+                                                                                                  
+ dense_12 (Dense)            (None, 80)                   25680     ['global_average_pooling2d_6[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_13 (Dense)            (None, 320)                  25920     ['dense_12[0][0]']            
+                                                                                                  
+ multiply_6 (Multiply)       (None, 2, 2, 320)            0         ['batch_normalization_21[0][0]
+                                                                    ',                            
+                                                                     'dense_13[0][0]']            
+                                                                                                  
+ global_average_pooling2d_7  (None, 320)                  0         ['multiply_6[0][0]']          
+  (GlobalAveragePooling2D)                                                                        
+                                                                                                  
+ dropout (Dropout)           (None, 320)                  0         ['global_average_pooling2d_7[0
+                                                                    ][0]']                        
+                                                                                                  
+ dense_14 (Dense)            (None, 7)                    2247      ['dropout[0][0]']             
+                                                                                                  
+==================================================================================================
+Total params: 1092395 (4.17 MB)
+Trainable params: 1079499 (4.12 MB)
+Non-trainable params: 12896 (50.38 KB)
+__________________________________________________________________________________________________
