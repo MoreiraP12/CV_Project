@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:app/main.dart';
 import 'package:app/providers/prediction_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../widgets/prediction_information.dart';
-
 
 class GalleryScreen extends ConsumerStatefulWidget {
   @override
@@ -31,6 +31,10 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     setState(() {
       _busy = false;
     });
+
+    final name =  await nameDetectionService.recognizeFacesInImage(imageFile);
+    print('recognized name $name');
+    print('');
   }
 
   @override

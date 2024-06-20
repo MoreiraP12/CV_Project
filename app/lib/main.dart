@@ -1,4 +1,5 @@
 import 'package:app/providers/model_provider.dart';
+import 'package:app/services/name_detection_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/gallery_screen.dart';
@@ -6,7 +7,12 @@ import 'screens/live_chat_screen.dart';
 import 'screens/model_settings_screen.dart';
 import 'screens/statistics_screen.dart';
 
+// TODO clean up instantiation
+late final NameDetectionService nameDetectionService;
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  nameDetectionService = NameDetectionService();
   runApp(
     ProviderScope(
       child: EmotionDetectionApp(),

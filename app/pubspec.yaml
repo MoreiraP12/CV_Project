@@ -37,10 +37,12 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_riverpod: ^2.5.1
   camera: ^0.11.0+1
-  tensorflow_lite_flutter: ^2.0.1
+  tensorflow_lite_flutter: ^2.0.1 # TODO just use tflite_flutter package
   image_picker: ^1.1.2
   image: ^3.3.0
   community_charts_flutter: ^1.0.4
+  tflite_flutter: ^0.10.4
+  path_provider: ^2.1.3
 
 dev_dependencies:
   flutter_test:
@@ -79,6 +81,8 @@ flutter:
     - assets/trained_vggface.txt
     - assets/converted_model.tflite
     - assets/converted_model.txt
+    - assets/facenet_512_int_quantized.tflite
+    - assets/mask_detector.tflite
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
