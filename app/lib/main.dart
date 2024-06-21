@@ -5,9 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/gallery_screen.dart';
 import 'screens/live_chat_screen.dart';
 import 'screens/model_settings_screen.dart';
-import 'screens/statistics_screen.dart';
-
-// TODO clean up instantiation
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,12 +25,12 @@ class EmotionDetectionApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomeScreen(),
+      //home: HomeScreen(),
+      initialRoute: '/gallery',
       routes: {
         '/gallery': (context) => GalleryScreen(),
         '/live-chat': (context) => LiveChatScreen(),
         '/model-settings': (context) => ModelSettingsScreen(),
-        '/statistics': (context) => StatisticsScreen(),
       },
     );
   }
@@ -73,12 +70,6 @@ class HomeScreen extends ConsumerWidget {
                       Navigator.pushNamed(context, '/model-settings');
                     },
                     child: Text('Model Settings'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/statistics');
-                    },
-                    child: Text('Statistics'),
                   ),
                 ],
         ),

@@ -1,4 +1,4 @@
-import 'package:app/providers/prediction_provider.dart';
+import 'package:app/providers/emotion_detection_result_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,15 +22,16 @@ class LiveChatScreen extends ConsumerWidget {
         ],
       ),
       body: Column(
-        children: [Expanded(child: Center(child: VideoFeed())), Consumer(
-          builder: (context, ref, _) {
-            final predictions = ref.watch(predictionProvider);
-            if (predictions == null) {
+        children: [
+          Expanded(child: Center(child: VideoFeed())),
+          Consumer(builder: (context, ref, _) {
+            final predictions = ref.watch(emotionDetectionResultProvider);
+            if (predictions.valueOrNull?.isEmpty ?? true ) {
               return const SizedBox.shrink();
             }
-            return PredictionInformation(predictions: predictions);
-          }
-        )],
+            return PredictionInformation(predictions: predictions.requireValue);
+          })
+        ],
       ),
     );
   }
@@ -73,7 +74,9 @@ class _CameraControllerNotifier
     await controller.initialize();
     if (!controller.value.isStreamingImages) {
       controller.startImageStream((CameraImage image) async {
-        await ref.read(predictionProvider.notifier).predictCameraStream(image);
+        await ref
+            .read(emotionDetectionResultProvider.notifier)
+            .predictCameraStream(image);
       });
     }
 
@@ -93,7 +96,7 @@ class _CameraControllerNotifier
       if (!controller.value.isStreamingImages) {
         controller.startImageStream((CameraImage image) async {
           await ref
-              .read(predictionProvider.notifier)
+              .read(emotionDetectionResultProvider.notifier)
               .predictCameraStream(image);
         });
       }

@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:app/services/mtcnn/mtcnn.dart';
+import 'package:app/services/name_detection_interface.dart';
+import 'package:camera/src/camera_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
@@ -11,14 +14,15 @@ import 'package:path/path.dart' as path;
 import 'dart:math';
 import 'package:uuid/uuid.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'dart:ui' as ui;
 
 final detectedFaceProvider = StateProvider<File?>((ref) => null);
 
-final nameDetectionServiceProvider =
-    AsyncNotifierProvider<NameDetectionServiceNotifier, List<String>>(
-        () => NameDetectionServiceNotifier());
+class NameDetectionService implements NameDetectionInterface {
+  NameDetectionService() {
+    _ready = _loadModel();
+  }
 
-class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
   static const facenetModelPath = 'assets/facenet.tflite';
   static const faceDetectorModelPath = 'assets/mask_detector.tflite';
   late Interpreter facenetInterpreter;
@@ -28,8 +32,10 @@ class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
   late List<int> faceDetectorInputShape;
   late List<int> faceDetectorOutputShape;
 
+  late final Future<void> _ready;
+
   @override
-  FutureOr<List<String>> build() async {
+  Future<void> _loadModel() async {
     print('start loading name detection model');
     facenetInterpreter = await Interpreter.fromAsset(facenetModelPath);
     facenetInputShape = facenetInterpreter.getInputTensor(0).shape;
@@ -42,7 +48,70 @@ class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
 
     saveKnownFaces();
     print('done loading name detection model');
-    return [];
+  }
+
+  @override
+  Future<List<NameDetectionResult>> predictFromImage(File imageFile) async {
+// Read file as bytes
+    final bytes = await imageFile.readAsBytes();
+
+    // Decode image using the image package
+    final decodedImage = img.decodeImage(bytes)!;
+
+    // Create a UI Image
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromPixels(
+      decodedImage.getBytes(),
+      decodedImage.width,
+      decodedImage.height,
+      ui.PixelFormat.rgba8888,
+      completer.complete,
+    );
+    final bitmap = await completer.future;
+    final image = await _loadImage(imageFile);
+    final faces = await mtcnn.detectFaces(bitmap, 50);
+
+    final result = <NameDetectionResult>[];
+
+    for (var face in faces) {
+      // Extract face bounding box
+      final x = face.left;
+      final y = face.top;
+      final width = face.width;
+      final height = face.height;
+
+      final faceImage = img.copyCrop(image, x, y, width, height);
+
+      final embedding = _generateEmbedding(faceImage);
+      final match = await _findMatch(embedding, 0.3);
+      if (match == null) continue;
+
+      final name = match[0];
+      final probability = match[1];
+
+      if (name != null) {
+        result.add(NameDetectionResult(
+            name: name,
+            probability: probability,
+            rectangle: Rectangle(left: face.left, top: face.top, right: face.right, bottom: face.bottom),
+            uuid: name,
+            collections: []));
+      }
+    }
+
+    return result;
+  }
+
+  @override
+  Future<List<NameDetectionResult>> predictFromCameraStream(CameraImage image) {
+    // TODO: implement predictFromCameraStream
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> registerPerson(String name, File imageFile) async {
+    final faceImage = await _loadImage(imageFile);
+    return _saveEmbedding(name, _generateEmbedding(faceImage));
   }
 
   Future<img.Image> _loadImage(File image) async {
@@ -51,34 +120,6 @@ class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
       throw Exception('Failed to decode image!?');
     }
     return decodedImage;
-  }
-
-  Future<List<dynamic>> _detectFacesMLKit(File image) async {
-    final inputImage = InputImage.fromFile(image);
-    final options = FaceDetectorOptions(enableClassification: true);
-    final faceDetector = FaceDetector(options: options);
-    final List<Face> faces = await faceDetector.processImage(inputImage);
-
-    return faces
-        .map((face) {
-          print('smiling prob ${face.smilingProbability}');
-          return {
-              'x': face.boundingBox.left.toInt(),
-              'y': face.boundingBox.top.toInt(),
-              'width': face.boundingBox.width.toInt(),
-              'height': face.boundingBox.height.toInt()
-            };
-        })
-        .toList();
-
-    /*return [
-      {
-        'x': data[bestBoundingBoxIndex],
-        'y': data[bestBoundingBoxIndex + 1],
-        'width': data[bestBoundingBoxIndex + 2],
-        'height': data[bestBoundingBoxIndex + 3]
-      }
-    ];*/
   }
 
   Future<List<dynamic>> _detectFaces(img.Image image) async {
@@ -210,19 +251,20 @@ class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
     return embeddings;
   }
 
-  Future<String?> _findMatch(
+  Future<List<dynamic>?> _findMatch(
       List<double> newEmbedding, double threshold) async {
     final knownEmbeddings = await _loadEmbeddings();
 
     final distances = <String, double>{};
-    String? result;
+    final result = <dynamic>[];
     for (var entry in knownEmbeddings.entries) {
       final name = entry.key;
       final embedding = entry.value;
       final distance = _calculateDistance(newEmbedding, embedding);
       distances[name] = distance;
       if (distance < threshold) {
-        result = name;
+        result[0] = name;
+        result[1] = threshold / distance;
         break;
       }
     }
@@ -237,56 +279,6 @@ class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
     }
 
     return sqrt(sum);
-  }
-
-  Future<List<String>> recognizeFacesInImage(File imageFile) async {
-    state = AsyncValue.loading();
-
-    final image = await _loadImage(imageFile);
-    final faces =
-        await _detectFacesMLKit(imageFile); //await _detectFaces(image);
-
-    final result = <String>[];
-
-    for (var face in faces) {
-      // Extract face bounding box
-      final x = face['x'];
-      final y = face['y'];
-      final width = face['width'];
-      final height = face['height'];
-
-      final faceImage = img.copyCrop(image, x, y, width, height);
-
-      // just for debugging
-      final jpgBytes = img.encodeJpg(faceImage);
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/${Uuid().v4()}.jpg';
-      final file = File(filePath);
-      await file.writeAsBytes(jpgBytes);
-      ref.read(detectedFaceProvider.notifier).state = file;
-      // debugging end
-
-      final embedding = _generateEmbedding(faceImage);
-      final name = await _findMatch(embedding, 0.3);
-
-      if (name != null) result.add(name);
-
-      if (name != null) {
-        print('Face recognized: $name');
-      } else {
-        final newName = Uuid().v4();
-        print('Face not recognized, creating new face with name $newName');
-        final personFolder =
-            Directory(path.join(imageFile.parent.path, 'images', newName));
-        await personFolder.create(recursive: true);
-        final newImagePath = path.join(personFolder.path, '1.jpg');
-        File(newImagePath).writeAsBytesSync(img.encodeJpg(faceImage));
-        await _saveEmbedding(newName, embedding);
-      }
-    }
-
-    state = AsyncValue.data(result);
-    return result;
   }
 
   Future<void> saveKnownFaces() async {
@@ -306,8 +298,7 @@ class NameDetectionServiceNotifier extends AsyncNotifier<List<String>> {
 
       for (var imageFile in images) {
         final image = img.decodeImage(imageFile.readAsBytesSync())!;
-        final faces =
-            await _detectFacesMLKit(imageFile); // await _detectFaces(image);
+        final faces = await _detectFaces(image);
 
         for (var face in faces) {
           final box = face['box'];

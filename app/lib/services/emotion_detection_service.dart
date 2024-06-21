@@ -1,41 +1,71 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:app/services/emotion_detection_interface.dart';
+import 'package:app/services/mtcnn/mtcnn.dart';
 import 'package:camera/camera.dart';
 import 'package:tensorflow_lite_flutter/tensorflow_lite_flutter.dart';
+import 'dart:ui' as ui;
+import 'package:image/image.dart' as img;
 
+class EmotionDetectionService implements EmotionDetectionInterface {
+  @override
+  Future<List<EmotionDetectionResult>> predictFromImage(File image) async {
+    // Read file as bytes
+    final bytes = await image.readAsBytes();
 
-// TODO use other package instead so we can use just one package for name detection too
-// https://pub.dev/packages/tflite_flutter
-// https://github.com/tensorflow/flutter-tflite/blob/main/example/image_classification_mobilenet/lib/helper/image_classification_helper.dart
+    // Decode image using the image package
+    final decodedImage = img.decodeImage(bytes)!;
 
-class EmotionDetectionService {
-  static Future<List<Prediction>> predictFromImage(File image) async {
-    final result = await Tflite.runModelOnImage(
-      path: image.path,
-      numResults: 7,
-      threshold: 0.0,
-      imageMean: 127.5,
-      imageStd: 127.5,
+    // Create a UI Image
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromPixels(
+      decodedImage.getBytes(),
+      decodedImage.width,
+      decodedImage.height,
+      ui.PixelFormat.rgba8888,
+      completer.complete,
     );
+    final bitmap = await completer.future;
 
-    return result!.map((e) => Prediction.fromJson((e as Map).cast<String, dynamic>())).toList();
+    final faceBoundingBoxes = await mtcnn.detectFaces(bitmap, 50);
+
+    final result = await Future.wait(faceBoundingBoxes.map((face) async {
+      final croppedFace = img.copyCrop(decodedImage, face.left.toInt(),
+          face.top.toInt(), face.width.toInt(), face.height.toInt());
+
+      final result = await Tflite.runModelOnFrame(
+        bytesList: [croppedFace.getBytes()],
+        numResults: 7,
+        threshold: 0.0,
+        imageMean: 127.5,
+        imageStd: 127.5,
+      );
+
+      final emotions = result!
+          .map((e) => Prediction.fromJson((e as Map).cast<String, dynamic>()));
+      return EmotionDetectionResult(
+        dominantEmotion: emotions
+            .reduce((a, b) => a.confidence > b.confidence ? a : b)
+            .label,
+        emotion: Map.fromEntries(
+            emotions.map((e) => MapEntry(e.label, e.confidence))),
+        region: Region(
+          h: face.height,
+          w: face.width,
+          x: face.left,
+          y: face.top,
+        ),
+      );
+    }));
+
+    return result;
   }
 
-  static Future<List<Prediction>> predictFromCameraStream(CameraImage image) async {
-    // Mock prediction
-    final result = await Tflite.runModelOnFrame(
-        bytesList: image.planes.map((plane) {
-          return plane.bytes;
-        }).toList(), // required
-        imageHeight: image.height,
-        imageWidth: image.width,
-        imageMean: 127.5, // defaults to 127.5
-        imageStd: 127.5, // defaults to 127.5
-        rotation: 90, // defaults to 90, Android only
-        numResults: 7, // defaults to 5
-        threshold: 0.0, // defaults to 0.1
-        );
-
-    return result!.map((e) => Prediction.fromJson((e as Map).cast<String, dynamic>())).toList();
+  @override
+  Future<List<EmotionDetectionResult>> predictFromCameraStream(
+      CameraImage image) async {
+    final file = await File('temp.jpg').writeAsBytes(image.planes[0].bytes);
+    return predictFromImage(file);
   }
 }
 
